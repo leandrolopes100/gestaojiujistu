@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-qaucaqb@64wf*8gd-9jdka-)4$08(b0x7wn)&)=k#ocjwd_=m_
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['yourusername.pythonanywhere.com']  # coloque seu domínio
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,7 +41,6 @@ ROOT_URLCONF = 'escolajiujitsu.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Pasta global para templates
         'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -70,23 +69,23 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Configurações de idioma e horário
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 
 # Arquivos estáticos
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"  # pasta onde collectstatic vai copiar os arquivos
+STATICFILES_DIRS = [BASE_DIR / "static"]  # pasta com seus arquivos estáticos originais
 
-#Foto
+# Arquivos de mídia
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Configurações de autenticação
-LOGIN_URL = 'login'                 # URL de login
-LOGIN_REDIRECT_URL = 'dashboard'    # Para onde vai depois de logar
-LOGOUT_REDIRECT_URL = 'login'       # Para onde vai depois de sair
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
