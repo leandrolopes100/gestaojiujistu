@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Exclusão{% endblock %}
+
+{% block content %}
+<style>
+  * {
+    font-family: 'Inter', sans-serif;
+  }
+</style>
+
+<div class="max-w-2xl mx-auto mt-16 p-8 bg-blue-50 border border-blue-400 rounded-2xl shadow-lg animate-fade-in">
+  <h1 class="text-2xl font-bold text-blue-900 mb-6">Excluir Despesa</h1>
+
+  <p class="text-gray-800 text-lg mb-8">
+    Tem certeza que deseja excluir a despesa? Esta ação <span class="text-red-600 font-semibold">não poderá ser desfeita</span>.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="flex justify-end gap-4">
+      <a href="{% url 'relatorio_despesas' %}" 
+         class="px-5 py-2 rounded-xl border border-gray-400 bg-white text-gray-700 hover:bg-gray-100 transition">
+        Cancelar
+      </a>
+      <button type="submit" 
+              class="px-5 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition">
+        Confirmar Exclusão
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

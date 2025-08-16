@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  * { font-family: 'Inter', sans-serif; }
+  .page-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: #1f2937;
+    animation: fade-in-down 0.6s ease-out both;
+  }
+
+  /* Filtro */
+  .filtro-dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: fade-in-up 0.6s ease-out both;
+  }
+  .filtro-dashboard label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+  }
+  .filtro-dashboard input {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    width: 11rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .filtro-dashboard input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.5);
+  }
+  .btn-buscar {
+    background-color: #2563eb;
+    color: #fff;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+  }
+  .btn-buscar:hover { background-color: #1d4ed8; }
+  .btn-limpar {
+    background-color: #dc2626;
+    color: #fff;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+  .btn-limpar:hover { background-color: #b91c1c; }
+
+  /* Títulos de seção */
+  .section-title {
+    margin-top: 3rem;
+    color: #2563eb;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Cards padrão */
+  .cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  .card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1),
+                0 4px 6px -2px rgba(0,0,0,0.05);
+    text-align: center;
+    animation: fade-in-up 0.6s ease-out both;
+  }
+  .card h3 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+  .card .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #111827;
+  }
+  .card .subvalue {
+    font-size: 1rem;
+    color: #6b7280;
+  }
+
+  /* Cards em linha para valores recebidos */
+  .cards-valores-recebidos {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.8rem;
+    overflow-x: auto;
+  }
+  .cards-valores-recebidos .card {
+    flex: 1 1 auto;
+    min-width: 150px;
+    padding: 1rem;
+  }
+  .cards-valores-recebidos h3 {
+    font-size: 0.9rem;
+  }
+  .cards-valores-recebidos .value {
+    font-size: 1.2rem;
+  }
+
+  /* Destaques por cor */
+  .destaque-azul { border-top: 4px solid #2563eb; }
+  .destaque-vermelho { border-top: 4px solid #dc2626; }
+  .destaque-verde { border-top: 4px solid #16a34a; }
+  .destaque-cinza { border-top: 4px solid #6b7280; }
+
+  /* Status */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .status-card {
+    border-radius: 1rem;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: white;
+  }
+  .status-em_dia { background-color: #16a34a; }
+  .status-quase_vencendo { background-color: #f59e0b; }
+  .status-atrasado { background-color: #dc2626; }
+  .status-sem_dados { background-color: #9ca3af; }
+  .status-card .number {
+    font-size: 1.8rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Gráficos */
+  .charts-container {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  canvas {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1),
+                0 4px 6px -2px rgba(0,0,0,0.05);
+    height: 350px !important;
+  }
+
+  @keyframes fade-in-down {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in-up {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<h1 class="page-title">Dashboard Geral</h1>
+
+<form method="get" class="filtro-dashboard" autocomplete="off">
+  <!-- Data Início -->
+  <div class="flex flex-col">
+    <label for="data_inicio">Data Início</label>
+    <div style="position: relative;">
+      <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio }}"
+             style="padding-left: 2rem; height:2.5rem; width:11rem; border-radius:0.375rem; border:1px solid #d1d5db;">
+      <span style="position: absolute; left: 0.5rem; top: 50%; transform: translateY(-50%); color: #6b7280;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 
+                   2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </span>
+    </div>
+  </div>
+
+  <!-- Data Fim -->
+  <div class="flex flex-col">
+    <label for="data_fim">Data Fim</label>
+    <div style="position: relative;">
+      <input type="date" id="data_fim" name="data_fim" value="{{ data_fim }}"
+             style="padding-left: 2rem; height:2.5rem; width:11rem; border-radius:0.375rem; border:1px solid #d1d5db;">
+      <span style="position: absolute; left: 0.5rem; top: 50%; transform: translateY(-50%); color: #6b7280;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 
+                   2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </span>
+    </div>
+  </div>
+
+  <!-- Botão Filtrar -->
+  <div class="flex flex-col justify-end">
+    <button type="submit" class="btn-buscar" style="width:100%;">Filtrar</button>
+  </div>
+
+  <!-- Botão Limpar -->
+  <div class="flex flex-col justify-end">
+    <a href="{% url 'dashboard' %}" class="btn-limpar" style="width:100%;">Limpar</a>
+  </div>
+</form>
+
+
+<h2 class="section-title">Dados Gerais</h2>
+<div class="cards-container">
+  <div class="card destaque-azul">
+    <h3>Total de Alunos</h3>
+    <div class="value">{{ total_alunos }}</div>
+    <div class="subvalue">Recebido: R$ {{ total_pago_alunos|floatformat:2|intcomma }}</div>
+  </div>
+  <div class="card destaque-vermelho">
+    <h3>Total de Despesas</h3>
+    <div class="value">{{ total_despesas_count }}</div>
+    <div class="subvalue">Valor: R$ {{ total_geral_despesas|floatformat:2|intcomma }}</div>
+  </div>
+  <div class="card destaque-verde">
+    <h3>Total de Vendas</h3>
+    <div class="value">{{ total_vendas }}</div>
+    <div class="subvalue">Valor: R$ {{ valor_total_vendas|floatformat:2|intcomma }}</div>
+  </div>
+</div>
+
+<h2 class="section-title">Valores Recebidos e Lucro</h2>
+<div class="cards-valores-recebidos">
+  {% for metodo, total in pagamentos_por_metodo.items %}
+    <div class="card destaque-cinza">
+      <h3>{{ metodo }}</h3>
+      <div class="value">R$ {{ total|floatformat:2|intcomma }}</div>
+    </div>
+  {% empty %}
+    <p style="flex: 1; text-align: center;">Nenhum pagamento registrado.</p>
+  {% endfor %}
+  <div class="card destaque-cinza">
+    <h3>Lucro Bruto</h3>
+    <div class="value">R$ {{ lucro_bruto|floatformat:2|intcomma }}</div>
+  </div>
+  <div class="card destaque-cinza">
+    <h3>Lucro Líquido</h3>
+    <div class="value">R$ {{ lucro_liquido|floatformat:2|intcomma }}</div>
+  </div>
+</div>
+
+<h2 class="section-title">Status de Pagamentos de Alunos</h2>
+<div class="status-grid">
+  <div class="status-card status-em_dia">
+    Em Dia
+    <div class="number">{{ alunos_em_dia }}</div>
+  </div>
+  <div class="status-card status-quase_vencendo">
+    Quase Vencendo
+    <div class="number">{{ alunos_quase_vencendo }}</div>
+  </div>
+  <div class="status-card status-atrasado">
+    Atrasado
+    <div class="number">{{ alunos_atrasado }}</div>
+  </div>
+  <div class="status-card status-sem_dados">
+    Sem Dados
+    <div class="number">{{ alunos_sem_dados }}</div>
+  </div>
+</div>
+
+<h2 class="section-title">Comparativos Gráficos</h2>
+<div class="charts-container">
+  <div>
+    <h3 style="text-align:center; color:#2563eb; margin-bottom: 1rem;">Distribuição Status de Pagamento de Alunos</h3>
+    <canvas id="statusPagamentoChart"></canvas>
+  </div>
+  <div>
+    <h3 style="text-align:center; color:#2563eb; margin-bottom: 1rem;">Comparativo Financeiro</h3>
+    <canvas id="financeiroChart"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Animação de bounce-in
+  const chartAnimation = {
+    duration: 1500,
+    easing: 'easeOutBounce'
+  };
+
+  // Efeito de tooltip estilizado
+  const customTooltip = {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    titleColor: '#fff',
+    bodyColor: '#fff',
+    bodyFont: { weight: 'bold' },
+    padding: 10,
+    displayColors: true,
+    usePointStyle: true
+  };
+
+  const ctxStatus = document.getElementById('statusPagamentoChart').getContext('2d');
+  new Chart(ctxStatus, {
+    type: 'pie',
+    data: {
+      labels: ['Em Dia', 'Quase Vencendo', 'Atrasado', 'Sem Dados'],
+      datasets: [{
+        data: [
+          {{ alunos_em_dia|default:"0" }},
+          {{ alunos_quase_vencendo|default:"0" }},
+          {{ alunos_atrasado|default:"0" }},
+          {{ alunos_sem_dados|default:"0" }}
+        ],
+        backgroundColor: [
+          'rgba(22,163,74,0.8)',
+          'rgba(245,158,11,0.8)',
+          'rgba(220,38,38,0.8)',
+          'rgba(156,163,175,0.8)'
+        ],
+        borderColor: '#fff',
+        borderWidth: 2,
+        hoverOffset: 20
+      }]
+    },
+    options: { 
+      responsive: true,
+      plugins: { 
+        legend: { position: 'bottom' },
+        tooltip: customTooltip
+      },
+      animation: chartAnimation
+    }
+  });
+
+  const ctxFinanceiro = document.getElementById('financeiroChart').getContext('2d');
+  new Chart(ctxFinanceiro, {
+    type: 'bar',
+    data: {
+      labels: ['Valor Pago Alunos', 'Despesas', 'Valor Total Vendas', 'Lucro Bruto', 'Lucro Líquido'],
+      datasets: [{
+        label: 'Valores em R$',
+        data: [
+          {{ total_pago_alunos|default:"0" }},
+          {{ total_geral_despesas|default:"0" }},
+          {{ valor_total_vendas|default:"0" }},
+          {{ lucro_bruto|default:"0" }},
+          {{ lucro_liquido|default:"0" }}
+        ],
+        backgroundColor: [
+          'rgba(37,99,235,0.8)',
+          'rgba(220,38,38,0.8)',
+          'rgba(16,185,129,0.8)',
+          'rgba(59,130,246,0.8)',
+          'rgba(99,102,241,0.8)'
+        ],
+        borderColor: '#fff',
+        borderWidth: 1,
+        borderRadius: 8,
+        hoverBackgroundColor: [
+          'rgba(37,99,235,1)',
+          'rgba(220,38,38,1)',
+          'rgba(16,185,129,1)',
+          'rgba(59,130,246,1)',
+          'rgba(99,102,241,1)'
+        ]
+      }]
+    },
+    options: { 
+      responsive: true,
+      scales: { 
+        y: { beginAtZero: true } 
+      },
+      plugins: { 
+        legend: { display: false },
+        tooltip: customTooltip
+      },
+      animation: chartAnimation
+    }
+  });
+</script>
+
+<!-- Gráfico de Despesas -->
+<div class="mt-6 bg-white p-6 rounded-2xl shadow-md border" style="border-width:0.5px; border-color: rgba(37, 99, 235,0.2);">
+  <h3 class="section-title">Despesas por Categoria</h3>
+  <canvas id="despesasChart" height="150"></canvas>
+</div>
+
+<!-- Totais -->
+<div class="totais-container mt-4 flex justify-start">
+  <div class="total-item flex items-center gap-2">
+    <span class="font-semibold text-gray-700">Total Geral de Despesas:</span>
+    <span class="font-bold text-red-700 text-lg">R$ {{ total_geral_despesas|floatformat:2|intcomma }}</span>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('despesasChart').getContext('2d');
+
+  const despesasChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ categorias_despesas|safe }},
+      datasets: [{
+        label: 'Valor das Despesas (R$)',
+        data: {{ valores_despesas|safe }},
+        backgroundColor: '#2563eb',  // Todas as barras azul
+        borderRadius: 6,             // Cantos arredondados
+        hoverBackgroundColor: '#1d4ed8', // Cor ao passar o mouse
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: {
+        duration: 1000,
+        easing: 'easeOutQuart'
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#2563eb',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          bodyFont: { weight: '600' },
+          callbacks: {
+            label: function(context) {
+              return 'R$ ' + context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#374151', font: { size: 13 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: '#e5e7eb' },
+          ticks: { color: '#374151', font: { size: 13 } }
+        }
+      },
+      hover: {
+        mode: 'index',
+        intersect: false
+      }
+    }
+  });
+</script>
+<!-- Gráfico de Lucro -->
+<div class="mt-6 bg-white p-6 rounded-2xl shadow-md border" style="border-width:0.5px; border-color: rgba(37, 99, 235,0.2);">
+  <h3 class="section-title">Comparativo Lucro por Fonte e Despesa</h3>
+  <canvas id="lucroChart" height="150"></canvas>
+
+  <!-- Indicativo de Lucro -->
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2">
+    <div class="flex items-center justify-between bg-green-50 text-green-800 px-3 py-2 rounded-lg text-sm shadow-sm border border-green-100">
+      <span>Pagamentos de Alunos</span>
+      <span>R$ {{ total_pago_alunos|floatformat:2|intcomma }}</span>
+    </div>
+    <div class="flex items-center justify-between bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm shadow-sm border border-blue-100">
+      <span>Vendas de Produtos</span>
+      <span>R$ {{ valor_total_vendas|floatformat:2|intcomma }}</span>
+    </div>
+    <div class="flex items-center justify-between bg-red-50 text-red-800 px-3 py-2 rounded-lg text-sm shadow-sm border border-red-100">
+      <span>Despesas</span>
+      <span>R$ {{ total_geral_despesas|floatformat:2|intcomma }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctxLucro = document.getElementById('lucroChart').getContext('2d');
+
+  const lucroChart = new Chart(ctxLucro, {
+    type: 'bar',
+    data: {
+      labels: ['Pagamentos de Alunos', 'Vendas de Produtos', 'Despesas'],
+      datasets: [{
+        label: 'Valores em R$',
+        data: [{{ total_pago_alunos }}, {{ valor_total_vendas }}, {{ total_geral_despesas }}],
+        backgroundColor: ['#16a34a','#2563eb','#dc2626'], // cores consistentes
+        borderRadius: 6,
+        hoverBackgroundColor: ['#15803d','#1d4ed8','#b91c1c'],
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 1000, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#2563eb',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          bodyFont: { weight: '600' },
+          callbacks: {
+            label: function(context) {
+              return context.label + ': R$ ' + context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#374151', font: { size: 13 } } },
+        y: { beginAtZero: true, grid: { color: '#e5e7eb' }, ticks: { color: '#374151', font: { size: 13 } } }
+      },
+      hover: { mode: 'index', intersect: false }
+    }
+  });
+</script>
+
+
+{% endblock %}

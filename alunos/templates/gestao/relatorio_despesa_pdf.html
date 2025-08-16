@@ -1,0 +1,68 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório de Despesas</title>
+  <style>
+    body { font-family: 'Inter', sans-serif; font-size: 12px; margin: 0; padding: 0; color: #111827; }
+    h2 { color: #2563eb; font-size: 16px; margin-bottom: 0.5rem; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    th, td { border: 1px solid #e5e7eb; padding: 4px 6px; text-align: left; }
+    th { background-color: #f3f4f6; font-weight: 600; }
+    tbody tr:nth-child(even) { background-color: #f9fafb; }
+    .totais { margin-top: 1rem; font-weight: 600; display: flex; justify-content: flex-end; }
+    .totais span { margin-left: 8px; }
+    .filtros { margin-bottom: 1rem; font-size: 12px; }
+    .rodape { font-size: 10px; color: #6b7280; text-align: center; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+    <div class="rodape">
+        Dados impressos conforme parâmetros aplicados pelo usuário
+    </div>
+  <h2>Relatório de Despesas</h2>
+
+  {% if data_inicio or data_fim %}
+  <div class="filtros">
+    {% if data_inicio %}Período início: {{ data_inicio }}{% endif %}
+    {% if data_fim %} - Fim: {{ data_fim }}{% endif %}
+  </div>
+  {% endif %}
+
+  <table>
+    <thead>
+      <tr>
+        <th>Descrição</th>
+        <th>Valor</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if despesas %}
+        {% for despesa in despesas %}
+        <tr>
+          <td>{{ despesa.nome.nome_despesa }}</td>
+          <td>R$ {{ despesa.valor_despesa|floatformat:2 }}</td>
+          <td>{{ despesa.data_despesa|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="3" style="text-align:center;">Nenhuma despesa encontrada.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <div class="totais">
+    <span>Total Geral: R$ {{ total_geral|floatformat:2 }}</span>
+  </div>
+
+  <div class="rodape">
+    Desenvolvido por Leandro Lopes - Sistema de Gestão de Academia
+  </div>
+
+</body>
+</html>
