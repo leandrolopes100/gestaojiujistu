@@ -43,6 +43,14 @@
       {% endif %}
     </div>
 
+    <div>
+      <label for="{{ form.data_despesa.id_for_label }}">Data</label>
+      {{ form.data_despesa|add_class:"w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white" }}
+      {% if form.data_despesa.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.data_despesa.errors.0 }}</p>
+      {% endif %}
+    </div>
+
     <div class="flex justify-end gap-4 pt-4">
       <a href="{% url 'relatorio_despesas' %}" 
          class="px-5 py-2 rounded-xl border border-gray-400 bg-white text-gray-700 hover:bg-gray-100 transition">

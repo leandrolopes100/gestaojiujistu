@@ -14,7 +14,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import io
 
-from .models import Aluno, Produto  # ajuste conforme seu app
+from .models import Aluno, Produto
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 )
@@ -158,6 +158,7 @@ class RelatorioReceberView(LoginRequiredMixin, TemplateView):
         })
         return context
 
+# -------------------------- REGISTRO DE VENDA PRODUTO -------------------------------
 
 class VendaProduto(LoginRequiredMixin, CreateView):
     model = Produto
@@ -170,6 +171,25 @@ class VendaProduto(LoginRequiredMixin, CreateView):
             form.instance.data_venda = now().date()
         return super().form_valid(form)
 
+class VendaProdutoUpdateView(LoginRequiredMixin, UpdateView):
+    model = Produto
+    form_class = ProdutoForm
+    template_name = 'financeiro/update_venda.html'
+    success_url = reverse_lazy('relatorio_receber')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['metodos_pagamento'] = MetodoPagamentoAluno.objects.all()
+        return context
+
+class VendaProdutoDeleteView(LoginRequiredMixin, DeleteView):
+    model = Produto
+    template_name = 'financeiro/delete_venda.html'
+    success_url = reverse_lazy('relatorio_receber')
+    
+    
+
+#--------------------------- REGISTO PAGAMENTO ALUNO --------------------------------------------
 
 class RegistrarPagamentoView(LoginRequiredMixin, View):
     template_name = 'financeiro/registrar_pagamento.html'
@@ -216,8 +236,29 @@ class RegistrarPagamentoView(LoginRequiredMixin, View):
 
         messages.success(request, "Pagamento registrado com sucesso!")
         return redirect('relatorio_receber')
+    
 
+class PagamentoUpdateView(UpdateView):
+    model = Aluno
+    template_name = "financeiro/update_pagamento.html"
+    fields = ["valor_pago", "data_pagamento", "metodo_pagamento", "pagamento_aluno"]
+    context_object_name = "pagamento"
+    success_url = reverse_lazy("relatorio_receber")  # ajuste para sua url correta
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["alunos"] = Aluno.objects.all()
+        context["metodos_pagamento"] = MetodoPagamentoAluno.objects.all()
+        context["planos_pagamento"] = PagamentoAluno.objects.all()
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, "Pagamento atualizado com sucesso!")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Erro ao atualizar pagamento. Verifique os dados.")
+        return super().form_invalid(form)
 # ------------------- DESPESAS -------------------
 
 class DespesasBaseView(LoginRequiredMixin):
@@ -263,7 +304,6 @@ class DespesasListView(LoginRequiredMixin, ListView):
             'data_fim': self.request.GET.get('data_fim', ''),
         })
         return context
-
 
 # ------------------- DASHBOARD -------------------
 
@@ -345,7 +385,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'valores_despesas': valores,
         })
         return context
-
 
 
 #### RELATÓRIOS PDF -----------------------------------------------------------------------

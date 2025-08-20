@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
@@ -15,11 +14,14 @@ from alunos.views import (
     RelatorioReceberView,
     VendaProduto,
     RegistrarPagamentoView,
+    PagamentoUpdateView,
     DespesasView,
     DespesasListView,
     DespesasDeleteView,
     DespesasUpdateView,
-    exportar_relatorio_recebidos_pdf
+    VendaProdutoDeleteView,
+    VendaProdutoUpdateView,
+    exportar_relatorio_recebidos_pdf,
   )
 
 from alunos.views import exportar_relatorio_despesas_pdf
@@ -38,10 +40,14 @@ urlpatterns = [
     path('financeiro/receber/', RelatorioReceberView.as_view(), name='relatorio_receber'),
     path('financeiro/venda/', VendaProduto.as_view(), name='registrar_venda'),
     path('financeiro/pagamento/', RegistrarPagamentoView.as_view(), name='registrar_pagamento'),
+    path("financeiro/pagamento/<int:pk>/editar/", PagamentoUpdateView.as_view(), name="update_pagamento"),
     path('financeiro/despesa/', DespesasView.as_view(), name='registrar_despesa'),
     path('financeiro/despesas/', DespesasListView.as_view(), name='relatorio_despesas'),
     path('financeiro/despesas/excluir/<int:pk>/', DespesasDeleteView.as_view(), name='delete_despesa'),
     path('financeiro/despesas/editar/<int:pk>/', DespesasUpdateView.as_view(), name='update_despesa'),
+    path('financeiro/receber/excluir-venda/<int:pk>/', VendaProdutoDeleteView.as_view(), name='delete_venda'),
+    path('financeiro/receber/editar-venda/<int:pk>/', VendaProdutoUpdateView.as_view(), name='update_venda'),
+
 
     #DASHBOARD ------------------------------------------------------------------
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
