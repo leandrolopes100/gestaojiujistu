@@ -1,10 +1,11 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from django.core.validators import MaxValueValidator, MinValueValidator
 from datetime import date, timedelta
 from django.conf import settings
 
 class GraduacaoAluno(models.Model):
-    faixa = models.CharField(max_length=6, verbose_name="Faixa")
+    faixa = models.CharField(max_length=30, verbose_name="Faixa")
 
     def __str__(self):
         return self.faixa
@@ -27,7 +28,7 @@ class MetodoPagamentoAluno(models.Model):
         return self.metodo
     
 class TipoTurmaAluno(models.Model):
-    categoria_etaria = models.CharField(max_length=10, verbose_name="Categoria Etária" )
+    categoria_etaria = models.CharField(max_length=30, verbose_name="Categoria Etária/Esporte" ) #BJJ ADULTO/INFANTIL - FUNCIONAL - THAI
     def __str__(self):
         return self.categoria_etaria
     
@@ -39,8 +40,8 @@ class Aluno(models.Model):
     telefone = PhoneNumberField(region='BR', verbose_name="Telefone de Contato")
     email = models.EmailField(blank=True, null=True, verbose_name="E-mail")
     endereco = models.CharField(max_length=100, blank=True, null=True, verbose_name="Endereço")
-    grupo_idade = models.ForeignKey(TipoTurmaAluno, null=True, on_delete=models.PROTECT, verbose_name="Categoria Etária")
-    faixa_aluno = models.ForeignKey(GraduacaoAluno, db_index=True, on_delete=models.PROTECT, verbose_name="Faixa")
+    grupo_idade = models.ForeignKey(TipoTurmaAluno, null=True, on_delete=models.PROTECT, verbose_name="Categoria")
+    faixa_aluno = models.ForeignKey(GraduacaoAluno, db_index=True, on_delete=models.PROTECT, null=True, blank=True, verbose_name="Faixa")
     data_cadastro = models.DateTimeField(auto_now_add=True)
     genero_aluno = models.ForeignKey(GeneroAluno, null=True, on_delete=models.PROTECT, verbose_name="Gênero")
     pagamento_aluno = models.ForeignKey(PagamentoAluno, null=True, on_delete=models.PROTECT, verbose_name="Mensal ou Plano")
@@ -50,7 +51,8 @@ class Aluno(models.Model):
     proximo_pagamento = models.DateField(blank=True, null=True, editable=False, verbose_name="Próximo Pagamento")  # <== NOVO CAMPO
     foto = models.ImageField(upload_to='foto_aluno/', blank=True, null=True)
     cadastrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, editable=False, verbose_name="Cadastrado por")
-
+ 
+    
     def save(self, *args, **kwargs):
         if self.nome:
             self.nome = self.nome.upper()
@@ -88,9 +90,14 @@ class Aluno(models.Model):
 class Produto(models.Model):
     nome_produto = models.CharField(max_length=100, verbose_name="Descrição")
     valor_produto = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name="Valor")
+    quantidade = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(999)], verbose_name="Quantidade")
     data_venda = models.DateField(auto_now_add=True, editable=False)
     metodo_pagamento = models.ForeignKey(MetodoPagamentoAluno, on_delete=models.SET_NULL, null=True, blank=True)
-
+    valor_total = models.DecimalField(max_digits=8, decimal_places=2, default=0, editable=False, verbose_name="Valor Total")
+    
+    def save(self, *args, **kwargs):
+        self.valor_total = self.valor_produto * self.quantidade
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nome_produto
@@ -105,4 +112,5 @@ class DespesaMensal(models.Model):
 class Despesa(models.Model):
     nome = models.ForeignKey(DespesaMensal, on_delete=models.PROTECT, verbose_name="Despesa")
     valor_despesa = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name="Valor")
-    data_despesa = models.DateField(auto_now_add=True)
+    data_despesa = models.DateField(verbose_name="Data")
+

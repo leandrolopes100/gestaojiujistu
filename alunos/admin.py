@@ -65,7 +65,7 @@ class TipoTurmaAlunoAdmin(admin.ModelAdmin):
 
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ['nome_produto', 'valor_produto', 'data_venda', 'metodo_pagamento']
+    list_display = ['nome_produto', 'valor_produto', 'data_venda', 'quantidade', 'valor_total', 'metodo_pagamento']
 
 @admin.register(DespesaMensal)
 class DespesaMensalAdmin(admin.ModelAdmin):

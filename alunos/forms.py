@@ -11,10 +11,9 @@ class AlunoForm(forms.ModelForm):
                 'telefone': forms.TextInput(attrs={'placeholder': '(99) 99999-9999', 'class': 'form-control'}),
                 'email': forms.EmailInput(attrs={'placeholder': 'exemplo@email.com', 'class': 'form-control'}),
                 'endereco': forms.TextInput(attrs={'class': 'form-control'}),
-                'valor_pago': forms.NumberInput(attrs={'class': 'form-control'}),
+                'valor_pago': forms.NumberInput(attrs={'placeholder': 'Valor', 'class': 'form-control'}),
                 'cpf': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '000.000.000-00'}),
                 'data_pagamento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-                
             }   
         
 
@@ -46,14 +45,35 @@ class MetodoPagamentoForm(forms.ModelForm): # Só no Painel ADM
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        fields = ['nome_produto', 'valor_produto', 'metodo_pagamento']
+        fields = ['nome_produto', 'valor_produto', 'quantidade', 'metodo_pagamento']
         widgets = {
-            'nome_produto': forms.TextInput(attrs={'class': 'form-control'}),
-            'valor_produto': forms.NumberInput(attrs={'class': 'form-control'}),
-            'metodo_pagamento': forms.Select(attrs={'class': 'form-control'}),
+            'nome_produto': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Digite a descrição do produto'
+            }),
+            'valor_produto': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Digite o valor unitário'
+            }),
+            'quantidade': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'max': '999',
+                'placeholder': 'Quantidade'
+            }),
+            'metodo_pagamento': forms.Select(attrs={
+                'class': 'form-control select2'
+            }),
         }
+
         
 class DespesaForm(forms.ModelForm):
     class Meta:
         model = Despesa
         fields = '__all__'
+        widgets = {
+            'data_despesa': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white'
+            }),
+        }

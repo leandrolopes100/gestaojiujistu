@@ -268,7 +268,7 @@
                     <span>{{ aluno.nome|truncatechars:15 }}</span>
                 </td>
                 <td>{{ aluno.cpf }}</td>
-                <td>{{ aluno.faixa_aluno }}</td>
+                <td>{{ aluno.faixa_aluno|default:"-------" }}</td>
                 <td>{{ aluno.grupo_idade }}</td>
                 <td>{{ aluno.pagamento_aluno }}</td>
                 <td>R$ {{ aluno.valor_pago|floatformat:2 }}</td>

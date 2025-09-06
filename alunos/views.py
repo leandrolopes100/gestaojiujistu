@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum
@@ -118,20 +118,32 @@ class AlunoDeleteView(LoginRequiredMixin, DeleteView):
 class RelatorioReceberView(LoginRequiredMixin, TemplateView):
     template_name = 'financeiro/relatorio_receber.html'
 
+    def get_mes_atual(self):
+        """Retorna o primeiro e último dia do mês atual"""
+        hoje = now().date()
+        primeiro_dia = hoje.replace(day=1)
+
+        if hoje.month == 12:
+            ultimo_dia = hoje.replace(day=31)
+        else:
+            proximo_mes = hoje.replace(month=hoje.month + 1, day=1)
+            ultimo_dia = proximo_mes - timedelta(days=1)
+
+        return primeiro_dia, ultimo_dia
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         get = self.request.GET
 
-        data_inicio = parse_date(get.get('data_inicio')) if get.get('data_inicio') else None
-        data_fim = parse_date(get.get('data_fim')) if get.get('data_fim') else None
+        primeiro_dia, ultimo_dia = self.get_mes_atual()
+
+        # Pega filtros ou assume o mês atual
+        data_inicio = parse_date(get.get('data_inicio')) if get.get('data_inicio') else primeiro_dia
+        data_fim = parse_date(get.get('data_fim')) if get.get('data_fim') else ultimo_dia
         metodo_pagamento_id = get.get('metodo_pagamento')
 
-        alunos = Aluno.objects.all()
-        vendas = Produto.objects.all()
-
-        if data_inicio and data_fim:
-            alunos = alunos.filter(data_pagamento__range=(data_inicio, data_fim))
-            vendas = vendas.filter(data_venda__range=(data_inicio, data_fim))
+        alunos = Aluno.objects.filter(data_pagamento__range=(data_inicio, data_fim))
+        vendas = Produto.objects.filter(data_venda__range=(data_inicio, data_fim))
 
         if metodo_pagamento_id:
             alunos = alunos.filter(metodo_pagamento_id=metodo_pagamento_id)
@@ -151,13 +163,12 @@ class RelatorioReceberView(LoginRequiredMixin, TemplateView):
             'total_pago_alunos': total_pago_alunos,
             'total_pago_vendas': total_pago_vendas,
             'total_geral': total_pago_alunos + total_pago_vendas,
-            'data_inicio': get.get('data_inicio'),
-            'data_fim': get.get('data_fim'),
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
             'metodo_pagamento_id': metodo_pagamento_id,
             'metodos_pagamento': MetodoPagamentoAluno.objects.all(),
         })
         return context
-
 # -------------------------- REGISTRO DE VENDA PRODUTO -------------------------------
 
 class VendaProduto(LoginRequiredMixin, CreateView):
@@ -186,7 +197,6 @@ class VendaProdutoDeleteView(LoginRequiredMixin, DeleteView):
     model = Produto
     template_name = 'financeiro/delete_venda.html'
     success_url = reverse_lazy('relatorio_receber')
-    
     
 
 #--------------------------- REGISTO PAGAMENTO ALUNO --------------------------------------------
@@ -226,7 +236,6 @@ class RegistrarPagamentoView(LoginRequiredMixin, View):
         except ValueError:
             messages.error(request, "Data de pagamento inválida.")
             return redirect('registrar_pagamento')
-
         metodo_pagamento = get_object_or_404(MetodoPagamentoAluno, id=metodo_pagamento_id)
 
         aluno.valor_pago = valor_pago
@@ -283,25 +292,51 @@ class DespesasUpdateView(DespesasBaseView, UpdateView):
 class DespesasListView(LoginRequiredMixin, ListView):
     model = Despesa
     template_name = 'financeiro/relatorio_despesa.html'
+    form_class = DespesaForm
     context_object_name = 'despesas'
     paginate_by = 50
 
     def get_queryset(self):
         qs = super().get_queryset()
         get = self.request.GET
-        if get.get('data_inicio'):
-            qs = qs.filter(data_despesa__gte=get['data_inicio'])
-        if get.get('data_fim'):
-            qs = qs.filter(data_despesa__lte=get['data_fim'])
+
+        hoje = now().date()
+        primeiro_dia = hoje.replace(day=1)
+
+        if hoje.month == 12:
+            ultimo_dia = hoje.replace(day=31)
+        else:
+            proximo_mes = hoje.replace(month=hoje.month + 1, day=1)
+            ultimo_dia = proximo_mes - timedelta(days=1)
+
+        data_inicio = get.get('data_inicio') or primeiro_dia.isoformat()
+        data_fim = get.get('data_fim') or ultimo_dia.isoformat()
+
+        qs = qs.filter(data_despesa__range=[data_inicio, data_fim])
         return qs.order_by('-data_despesa', 'id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        hoje = now().date()
+        primeiro_dia = hoje.replace(day=1)
+
+        if hoje.month == 12:
+            ultimo_dia = hoje.replace(day=31)
+        else:
+            proximo_mes = hoje.replace(month=hoje.month + 1, day=1)
+            ultimo_dia = proximo_mes - timedelta(days=1)
+
+        get = self.request.GET
+        data_inicio = get.get('data_inicio') or primeiro_dia
+        data_fim = get.get('data_fim') or ultimo_dia
+
         despesas = context['despesas']
+
         context.update({
             'total_geral': despesas.aggregate(total=Sum('valor_despesa'))['total'] or 0,
-            'data_inicio': self.request.GET.get('data_inicio', ''),
-            'data_fim': self.request.GET.get('data_fim', ''),
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
         })
         return context
 

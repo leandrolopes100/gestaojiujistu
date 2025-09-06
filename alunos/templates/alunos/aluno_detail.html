@@ -93,12 +93,12 @@
 
           <div>
             <dt class="font-semibold text-gray-700">E-mail</dt>
-            <dd>{{ aluno.email }}</dd>
+            <dd>{{ aluno.email|default:"-------"  }}</dd>
           </div>
 
           <div>
             <dt class="font-semibold text-gray-700">Endereço</dt>
-            <dd>{{ aluno.endereco }}</dd>
+            <dd>{{ aluno.endereco|default:"-------"  }}</dd>
           </div>
 
           <div>
@@ -113,7 +113,7 @@
 
           <div>
             <dt class="font-semibold text-gray-700">Faixa</dt>
-            <dd>{{ aluno.faixa_aluno.faixa }}</dd>
+            <dd>{{ aluno.faixa_aluno.faixa|default:"-------" }}</dd>
           </div>
 
           <div>
@@ -138,7 +138,7 @@
 
           <div>
             <dt class="font-semibold text-gray-700">Último Pagamento</dt>
-            <dd>{{ aluno.data_pagamento|date:"d/m/Y" }}</dd>
+            <dd>{{ aluno.data_pagamento|date:"d/m/Y"|default:"Nenhum Pagamento Efetuado"  }}</dd>
           </div>
 
           <div>

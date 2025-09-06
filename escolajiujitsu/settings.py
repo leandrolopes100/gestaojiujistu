@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-qaucaqb@64wf*8gd-9jdka-)4$08(b0x7wn)&)=k#ocjwd_=m_
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['yourusername.pythonanywhere.com']  # coloque seu domínio
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # coloque seu domínio
 
 INSTALLED_APPS = [
     'django.contrib.admin',

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Adicionar Produto{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+    <div class="bg-gray-900 shadow-lg rounded-2xl border border-gray-700 p-6">
+        <h2 class="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Adicionar Produto
+        </h2>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <!-- Nome -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-200 mb-1">Descrição</label>
+                {{ form.nome_produto }}
+            </div>
+
+            <!-- Valor -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-200 mb-1">Valor Unitário</label>
+                {{ form.valor_produto }}
+            </div>
+
+            <!-- Quantidade -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-200 mb-1">Quantidade</label>
+                {{ form.quantidade }}
+            </div>
+
+            <!-- Método de Pagamento -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-200 mb-1">Método de Pagamento</label>
+                {{ form.metodo_pagamento }}
+            </div>
+
+            <!-- Botões -->
+            <div class="flex justify-end gap-3 pt-4">
+                <a href="{% url 'lista_produtos' %}" 
+                   class="px-5 py-2 rounded-xl text-gray-300 hover:text-white border border-gray-600 hover:bg-gray-700 transition">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="px-5 py-2 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition">
+                    Salvar Produto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
